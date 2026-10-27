@@ -23,3 +23,6 @@ packaging>=20.0
 uvicorn
 fastapi
 qwen-vl-utils[decord]
+openai>=1.0.0
+faiss-cpu
+sentence-transformers

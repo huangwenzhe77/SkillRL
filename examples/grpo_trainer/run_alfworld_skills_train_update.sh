@@ -1,6 +1,9 @@
 set -x
 ENGINE=${1:-vllm}
 shift  # Remove first argument so $@ only contains extra params
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+DATA_DIR=${DATA_DIR:-"$HOME/data/verl-agent/text"}
+: "${MODEL_PATH:?Export MODEL_PATH to the Qwen2.5-7B-Instruct SFT checkpoint}"
 export VLLM_ATTENTION_BACKEND=FLASH_ATTN
 
 # Enable more verbose logging
@@ -25,8 +28,8 @@ python3 -m examples.data_preprocess.prepare \
 
 python3 -m verl.trainer.main_ppo \
     algorithm.adv_estimator=grpo \
-    data.train_files=$HOME/data/verl-agent/text/train.parquet \
-    data.val_files=$HOME/data/verl-agent/text/test.parquet \
+    data.train_files=$DATA_DIR/train.parquet \
+    data.val_files=$DATA_DIR/test.parquet \
     data.train_batch_size=$train_data_size \
     data.val_batch_size=$val_data_size \
     data.max_prompt_length=4096 \
@@ -67,7 +70,7 @@ python3 -m verl.trainer.main_ppo \
     env.rollout.n=$group_size \
     env.resources_per_worker.num_cpus=$num_cpus_per_env_worker \
     +env.use_skills_only_memory=True \
-    +env.skills_only_memory.skills_json_path=memory_data/alfworld/claude_style_skills.json \
+    +env.skills_only_memory.skills_json_path=$REPO_ROOT/memory_data/alfworld/claude_style_skills.json \
     +env.skills_only_memory.top_k=6 \
     +env.skills_only_memory.enable_dynamic_update=True \
     +env.skills_only_memory.update_skills_from_train=True \

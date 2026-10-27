@@ -42,6 +42,9 @@ install_requires = [
     "wandb",
     "packaging>=20.0",
     "qwen-vl-utils[decord]",
+    "openai>=1.0.0",
+    "faiss-cpu",
+    "sentence-transformers",
 ]
 
 TEST_REQUIRES = ["pytest", "pre-commit", "py-spy"]

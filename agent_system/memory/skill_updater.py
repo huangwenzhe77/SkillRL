@@ -1,17 +1,15 @@
 """
 LLM-based skill updater that generates new skills from failed trajectories.
-Uses Azure OpenAI o3 model for analysis.
+Uses an OpenAI-compatible chat model for analysis. Azure OpenAI is supported
+for backward compatibility.
 
-Required environment variables:
-    AZURE_OPENAI_API_KEY      – Azure OpenAI API key
-    AZURE_OPENAI_ENDPOINT     – Azure OpenAI endpoint URL
-    AZURE_OPENAI_API_VERSION  – API version (default: 2025-01-01-preview)
+For a custom provider set LLM_API_KEY, LLM_BASE_URL and LLM_MODEL.
 """
 import json
 import os
 import re
 from typing import List, Dict, Any, Optional
-from openai import AzureOpenAI
+from skill_generation.llm_client import create_client
 
 
 class SkillUpdater:
@@ -20,23 +18,7 @@ class SkillUpdater:
         max_new_skills_per_update: int = 3,
         max_completion_tokens: int = 2048,
     ):
-        # Read credentials from environment variables — never hardcode secrets.
-        api_key = os.environ.get("AZURE_OPENAI_API_KEY")
-        endpoint = os.environ.get("AZURE_OPENAI_ENDPOINT")
-        api_version = os.environ.get("AZURE_OPENAI_API_VERSION", "2025-01-01-preview")
-
-        if not api_key or not endpoint:
-            raise EnvironmentError(
-                "SkillUpdater requires AZURE_OPENAI_API_KEY and AZURE_OPENAI_ENDPOINT "
-                "environment variables to be set."
-            )
-
-        self.client = AzureOpenAI(
-            api_key=api_key,
-            azure_endpoint=endpoint,
-            api_version=api_version,
-        )
-        self.model = "o3"
+        self.client, self.model = create_client("o3")
         self.max_completion_tokens = max_completion_tokens
         self.max_new_skills_per_update = max_new_skills_per_update
         self.update_history = []

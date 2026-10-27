@@ -86,6 +86,12 @@ class SkillsOnlyMemory(BaseMemory):
         with open(skills_json_path, 'r') as f:
             self.skills = json.load(f)
 
+        # Search skill banks use ``query_type_skills`` while ALFWorld and
+        # WebShop use ``task_specific_skills``.  Normalize the two schemas at
+        # runtime so the same retriever works for all three environments.
+        if 'task_specific_skills' not in self.skills and 'query_type_skills' in self.skills:
+            self.skills['task_specific_skills'] = self.skills['query_type_skills']
+
         self.retrieval_mode = retrieval_mode
         self.embedding_model_path = embedding_model_path or "Qwen/Qwen3-Embedding-0.6B"
         self.task_specific_top_k = task_specific_top_k
@@ -171,6 +177,19 @@ class SkillsOnlyMemory(BaseMemory):
                 return 'beauty_health'
             else:
                 return 'other'
+
+        # ---- Search categories ------------------------------------------
+        elif 'direct_retrieval' in task_specific:
+            comparison_markers = [
+                'both', 'which of', 'same', 'common', 'more', 'less',
+                'older', 'younger', 'taller', 'shorter', 'difference between',
+            ]
+            if any(marker in goal for marker in comparison_markers):
+                return 'comparison'
+            # Search questions are otherwise routed to the general direct
+            # retrieval skills.  Embedding mode can still rank across all
+            # query-type categories when the question is ambiguous.
+            return 'direct_retrieval'
 
         # ---- Fallback: first key in task_specific_skills, or 'unknown' --
         else:

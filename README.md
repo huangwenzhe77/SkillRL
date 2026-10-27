@@ -125,8 +125,19 @@ pip install gym==0.26.2
 
 **API Setup**
 ```
-export AZURE_OPENAI_API_KEY="..."
-export AZURE_OPENAI_ENDPOINT=""
+# Any OpenAI-compatible provider (recommended for a custom API)
+export LLM_API_KEY="..."
+export LLM_BASE_URL="https://your-provider.example.com/v1"
+export LLM_MODEL="your-model-name"
+
+# The original Azure setup is still supported
+# export AZURE_OPENAI_API_KEY="..."
+# export AZURE_OPENAI_ENDPOINT="https://your-resource.openai.azure.com/"
+# export AZURE_OPENAI_API_VERSION="2025-01-01-preview"
+
+# SFT trajectory scripts use the standard OpenAI variable names:
+export OPENAI_API_KEY="$LLM_API_KEY"
+export OPENAI_BASE_URL="$LLM_BASE_URL"
 ```
 
 ---
@@ -257,8 +268,8 @@ python skill_generation/webshop.py \
 
 # Search
 python skill_generation/search.py \
-    --memory_path memory_data/webshop/generated_memories_webshop_100.json \
-    --output_path memory_data/webshop/claude_style_skills.json
+    --memory_path memory_data/search/generated_memories_search.json \
+    --output_path memory_data/search/claude_style_skills_search.json
 ```
 
 ---

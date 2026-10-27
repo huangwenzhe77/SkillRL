@@ -37,20 +37,20 @@ Output format:
 }
 """
 
+import argparse
 import json
 import os
 from typing import List, Dict, Any
-from openai import AzureOpenAI
+try:
+    from skill_generation.llm_client import create_client
+except ImportError:  # direct ``python skill_generation/alfworld.py`` execution
+    from llm_client import create_client
 
 class OpenAIClient:
     def __init__(self, max_new_tokens: int = 4096, model: str = "o3"):
         self.max_new_tokens = max_new_tokens
         self.model = model
-        self.client = AzureOpenAI(
-            api_key="",
-            azure_endpoint="",
-            api_version=""
-        )
+        self.client, self.model = create_client(model)
 
     def generate_response(self, messages: list) -> str:
         response = self.client.chat.completions.create(
@@ -311,13 +311,13 @@ Return ONLY the JSON array, no other text."""
 
 
 def main():
-    # Configuration
-    memory_json_path = os.path.expanduser(
-        "memory_data/alfworld/generated_memories_alfworld_total.json"
-    )
-    output_path = os.path.expanduser(
-        "memory_data/alfworld/claude_style_skills.json"
-    )
+    parser = argparse.ArgumentParser(description="Generate an ALFWorld skill bank with an OpenAI-compatible teacher.")
+    parser.add_argument("--memory_path", default="memory_data/alfworld/generated_memories_alfworld_total.json")
+    parser.add_argument("--output_path", default="memory_data/alfworld/claude_style_skills.json")
+    parser.add_argument("--model", default="o3")
+    args = parser.parse_args()
+    memory_json_path = os.path.expanduser(args.memory_path)
+    output_path = os.path.expanduser(args.output_path)
 
     print("Loading existing memories...")
     memories = load_memories(memory_json_path)
@@ -329,7 +329,7 @@ def main():
         print(f"  {task_type}: {len(data['success'])} success, {len(data['failure'])} failure")
 
     # Initialize client
-    client = OpenAIClient(max_new_tokens=4096, model="o3")
+    client = OpenAIClient(max_new_tokens=4096, model=args.model)
 
     # Generate skills
     print("\n=== Generating General Skills ===")

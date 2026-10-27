@@ -37,21 +37,21 @@ Output format:
 }
 """
 
+import argparse
 import json
 import os
 from typing import List, Dict, Any
-from openai import AzureOpenAI
+try:
+    from skill_generation.llm_client import create_client
+except ImportError:  # direct ``python skill_generation/webshop.py`` execution
+    from llm_client import create_client
 
 
 class OpenAIClient:
     def __init__(self, max_new_tokens: int = 4096, model: str = "o3"):
         self.max_new_tokens = max_new_tokens
         self.model = model
-        self.client = AzureOpenAI(
-            api_key="",
-            azure_endpoint="",
-            api_version=""
-        )
+        self.client, self.model = create_client(model)
 
     def generate_response(self, messages: list) -> str:
         response = self.client.chat.completions.create(
@@ -386,14 +386,19 @@ Return ONLY the JSON array, no other text."""
 
 
 def main():
-    # Configuration
-    memory_json_paths = [
-        os.path.expanduser("memory_data/webshop/generated_memories_webshop_100.json"),
-        os.path.expanduser("memory_data/webshop/generated_memories_webshop_101-200.json"),
-    ]
-    output_path = os.path.expanduser(
-        "memory_data/webshop/claude_style_skills.json"
+    parser = argparse.ArgumentParser(description="Generate a WebShop skill bank with an OpenAI-compatible teacher.")
+    parser.add_argument(
+        "--memory_path", nargs="+",
+        default=[
+            "memory_data/webshop/generated_memories_webshop_100.json",
+            "memory_data/webshop/generated_memories_webshop_101-200.json",
+        ],
     )
+    parser.add_argument("--output_path", default="memory_data/webshop/claude_style_skills.json")
+    parser.add_argument("--model", default="o3")
+    args = parser.parse_args()
+    memory_json_paths = [os.path.expanduser(p) for p in args.memory_path]
+    output_path = os.path.expanduser(args.output_path)
 
     print("Loading existing memories...")
     memories = load_memories(memory_json_paths)
@@ -405,7 +410,7 @@ def main():
         print(f"  {product_type}: {len(data['success'])} success, {len(data['failure'])} failure")
 
     # Initialize client
-    client = OpenAIClient(max_new_tokens=4096, model="o3")
+    client = OpenAIClient(max_new_tokens=4096, model=args.model)
 
     # Generate skills
     print("\n=== Generating General Skills ===")
