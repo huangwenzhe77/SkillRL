@@ -70,8 +70,8 @@ pip install faiss-cpu sentence-transformers
 
 ```bash
 export LLM_API_KEY="你的 API Key"
-export LLM_BASE_URL="https://服务商提供的地址/v1"
-export LLM_MODEL="服务商要求的模型名"
+export LLM_BASE_URL="https://api.aicodemirror.ai"
+export LLM_MODEL="gpt-5.6-terra"
 export OPENAI_API_KEY="$LLM_API_KEY"
 export OPENAI_BASE_URL="$LLM_BASE_URL"
 export OPENAI_MODEL="$LLM_MODEL"

@@ -18,7 +18,7 @@ class SkillUpdater:
         max_new_skills_per_update: int = 3,
         max_completion_tokens: int = 2048,
     ):
-        self.client, self.model = create_client("o3")
+        self.client, self.model = create_client("gpt-5.6-terra")
         self.max_completion_tokens = max_completion_tokens
         self.max_new_skills_per_update = max_new_skills_per_update
         self.update_history = []
@@ -58,7 +58,7 @@ class SkillUpdater:
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[{"role": "user", "content": prompt}],
-                max_completion_tokens=self.max_completion_tokens,
+                max_tokens=self.max_completion_tokens,
             )
             raw_skills = self._parse_skills_response(response.choices[0].message.content)
 

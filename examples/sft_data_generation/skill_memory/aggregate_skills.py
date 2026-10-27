@@ -40,14 +40,16 @@ Usage:
         --input_file generated_memories_alfworld.json \\
         --output_file alfworld_skill_bank.json \\
         --env alfworld \\
-        --model gpt-4o
+        --model gpt-5.6-terra
 """
 import argparse
 import json
 import os
 import re
+import sys
 
-from openai import OpenAI
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
+from skill_generation.llm_client import create_client
 
 # ---------------------------------------------------------------------------
 # Category sets — kept aligned with `skill_generation/{alfworld,webshop,search}.py`
@@ -168,7 +170,7 @@ Constraints:
 # LLM call + JSON parsing
 # ---------------------------------------------------------------------------
 
-def call_llm(client: OpenAI, model: str, system_prompt: str, user_payload: dict) -> list:
+def call_llm(client, model: str, system_prompt: str, user_payload: dict) -> list:
     resp = client.chat.completions.create(
         model=model,
         messages=[
@@ -337,7 +339,7 @@ ENV_CONFIG = {
 }
 
 
-def aggregate(memories: list[dict], env: str, client: OpenAI, model: str) -> dict:
+def aggregate(memories: list[dict], env: str, client, model: str) -> dict:
     cfg = ENV_CONFIG[env]
     successes = [m for m in memories if m.get("tags", {}).get("outcome") == "Success"]
     failures = [m for m in memories if m.get("tags", {}).get("outcome") == "Failure"]
@@ -403,18 +405,15 @@ def main():
     parser.add_argument("--input_file", required=True, help="generated_memories_*.json from stage 3")
     parser.add_argument("--output_file", required=True)
     parser.add_argument("--env", choices=["alfworld", "webshop", "search"], required=True)
-    parser.add_argument("--model", default="gpt-4o")
+    parser.add_argument("--model", default="gpt-5.6-terra")
     args = parser.parse_args()
 
-    api_key = os.environ.get("OPENAI_API_KEY")
-    if not api_key:
-        raise SystemExit("Set OPENAI_API_KEY in the environment.")
-    client = OpenAI(api_key=api_key)
+    client, model = create_client(args.model)
 
     with open(args.input_file, "r", encoding="utf-8") as f:
         memories = json.load(f)
 
-    skill_bank = aggregate(memories, args.env, client, args.model)
+    skill_bank = aggregate(memories, args.env, client, model)
 
     os.makedirs(os.path.dirname(os.path.abspath(args.output_file)) or ".", exist_ok=True)
     with open(args.output_file, "w", encoding="utf-8") as f:

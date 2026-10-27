@@ -10,15 +10,17 @@ Usage:
     python generate_memory_webshop.py \\
         --input_file processed_trajectories_webshop_cleaned.json \\
         --output_file generated_memories_webshop.json \\
-        --model gpt-4o
+        --model gpt-5.6-terra
 """
 import argparse
 import json
 import os
 import re
+import sys
 import uuid
 
-from openai import OpenAI
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
+from skill_generation.llm_client import create_client
 
 PRICE_INPUT = 0.00125 / 1000
 PRICE_OUTPUT = 0.0100 / 1000
@@ -153,20 +155,17 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_file", required=True)
     parser.add_argument("--output_file", required=True)
-    parser.add_argument("--model", default="gpt-4o")
+    parser.add_argument("--model", default="gpt-5.6-terra")
     parser.add_argument("--env_name", default="WebShop")
     parser.add_argument("--all_trajectories", action="store_true")
     args = parser.parse_args()
 
-    api_key = os.environ.get("OPENAI_API_KEY")
-    if not api_key:
-        raise SystemExit("Set OPENAI_API_KEY in the environment.")
-    client = OpenAI(api_key=api_key)
+    client, model = create_client(args.model)
 
     with open(args.input_file, "r", encoding="utf-8") as f:
         entries = json.load(f)
 
-    gen = MemoryGenerator(client, args.model)
+    gen = MemoryGenerator(client, model)
     memories = []
 
     for entry in entries:
@@ -192,7 +191,7 @@ def main():
 
     cost = gen.input_tokens * PRICE_INPUT + gen.output_tokens * PRICE_OUTPUT
     print(f"\nSaved {len(memories)} memories to {args.output_file}")
-    print(f"Estimated cost (gpt-4o pricing): ${cost:.4f}")
+    print(f"Estimated cost estimate: ${cost:.4f}")
 
 
 if __name__ == "__main__":

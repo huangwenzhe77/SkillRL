@@ -39,7 +39,7 @@ Usage:
         --input_file processed_trajectories_alfworld_cleaned.json \\
         --memory_file generated_memories_alfworld.json \\
         --output_file distilled_trajectories_alfworld.json \\
-        --model o3 \\
+        --model gpt-5.6-terra \\
         --max_history 5
 """
 import argparse
@@ -49,8 +49,8 @@ import random
 import re
 import sys
 
-from openai import OpenAI
-
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
+from skill_generation.llm_client import create_client
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from skill_retrieval import classify_alfworld_task, format_skills_block, load_skill_bank  # noqa: E402
 
@@ -205,7 +205,7 @@ def build_conversation(
 
 
 def call_o3_for_reasoning(
-    client: OpenAI,
+    client,
     model: str,
     task: str,
     skills_block: str,
@@ -235,7 +235,7 @@ def call_o3_for_reasoning(
 
 
 def distill_one(
-    client: OpenAI,
+    client,
     model: str,
     task: str,
     parsed_steps: list[dict],
@@ -278,7 +278,7 @@ def main():
         help="Aggregated skill bank from 03_skill_memory/aggregate_skills.py",
     )
     parser.add_argument("--output_file", required=True)
-    parser.add_argument("--model", default="o3")
+    parser.add_argument("--model", default="gpt-5.6-terra")
     parser.add_argument("--max_history", type=int, default=5)
     parser.add_argument(
         "--seed", type=int, default=0, help="Seed for sampling admissible actions in done step"
@@ -288,10 +288,7 @@ def main():
     )
     args = parser.parse_args()
 
-    api_key = os.environ.get("OPENAI_API_KEY")
-    if not api_key:
-        raise SystemExit("Set OPENAI_API_KEY in the environment.")
-    client = OpenAI(api_key=api_key)
+    client, model = create_client(args.model)
 
     rng = random.Random(args.seed)
     skill_bank = load_skill_bank(args.skill_bank_file)
@@ -310,7 +307,7 @@ def main():
                 continue
             try:
                 entry = distill_one(
-                    client, args.model, task, steps, skill_bank, args.max_history, rng
+                    client, model, task, steps, skill_bank, args.max_history, rng
                 )
                 distilled.append(entry)
                 n_processed += 1

@@ -127,8 +127,8 @@ pip install gym==0.26.2
 ```
 # Any OpenAI-compatible provider (recommended for a custom API)
 export LLM_API_KEY="..."
-export LLM_BASE_URL="https://your-provider.example.com/v1"
-export LLM_MODEL="your-model-name"
+export LLM_BASE_URL="https://api.aicodemirror.ai"
+export LLM_MODEL="gpt-5.6-terra"
 
 # The original Azure setup is still supported
 # export AZURE_OPENAI_API_KEY="..."
@@ -138,6 +138,7 @@ export LLM_MODEL="your-model-name"
 # SFT trajectory scripts use the standard OpenAI variable names:
 export OPENAI_API_KEY="$LLM_API_KEY"
 export OPENAI_BASE_URL="$LLM_BASE_URL"
+export OPENAI_MODEL="$LLM_MODEL"
 ```
 
 ---

@@ -55,7 +55,7 @@ except ImportError:  # direct ``python skill_generation/search.py`` execution
 
 
 class OpenAIClient:
-    def __init__(self, max_new_tokens: int = 4096, model: str = "o3"):
+    def __init__(self, max_new_tokens: int = 4096, model: str = "gpt-5.6-terra"):
         self.max_new_tokens = max_new_tokens
         self.model = model
         self.client, self.model = create_client(model)
@@ -64,7 +64,7 @@ class OpenAIClient:
         response = self.client.chat.completions.create(
             model=self.model,
             messages=messages,
-            max_completion_tokens=self.max_new_tokens,
+            max_tokens=self.max_new_tokens,
         )
         return response.choices[0].message.content
 
@@ -346,7 +346,7 @@ def main():
     parser = argparse.ArgumentParser(description="Generate a Search skill bank with an OpenAI-compatible teacher.")
     parser.add_argument("--memory_path", default="memory_data/search/generated_memories_search.json")
     parser.add_argument("--output_path", default="memory_data/search/claude_style_skills_search.json")
-    parser.add_argument("--model", default="o3")
+    parser.add_argument("--model", default="gpt-5.6-terra")
     args = parser.parse_args()
     memory_json_path = os.path.expanduser(args.memory_path)
     output_path = os.path.expanduser(args.output_path)

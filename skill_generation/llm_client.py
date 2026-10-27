@@ -10,7 +10,18 @@ import os
 from typing import Tuple
 
 
-def create_client(default_model: str = "o3") -> Tuple[object, str]:
+DEFAULT_MODEL = "gpt-5.6-terra"
+
+
+def normalize_base_url(base_url: str) -> str:
+    """Return a base URL suitable for OpenAI SDK Chat Completions calls."""
+    normalized = base_url.strip().rstrip("/")
+    if normalized and not normalized.endswith("/v1"):
+        normalized = f"{normalized}/v1"
+    return normalized
+
+
+def create_client(default_model: str = DEFAULT_MODEL) -> Tuple[object, str]:
     """Return ``(client, model_name)`` using the configured provider."""
     api_key = (
         os.environ.get("LLM_API_KEY")
@@ -31,7 +42,7 @@ def create_client(default_model: str = "o3") -> Tuple[object, str]:
     # vLLM servers when they implement /v1/chat/completions.
     if base_url:
         from openai import OpenAI
-        return OpenAI(api_key=api_key, base_url=base_url), model
+        return OpenAI(api_key=api_key, base_url=normalize_base_url(base_url)), model
 
     endpoint = os.environ.get("AZURE_OPENAI_ENDPOINT")
     if endpoint:
